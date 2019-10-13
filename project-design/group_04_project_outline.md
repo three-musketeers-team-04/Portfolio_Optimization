@@ -1,21 +1,24 @@
-# TITLE: Predicting stock prices
-
+# TITLE: Portfolio optimization
 
 # TEAM MEMBERS: Armen, Min, and Roland
 
-
 # PROJECT OUTLINE
 
+## Problem statement 
+* Optimize portfolio based on inputs by investors.
 
-# Problem statement 
-* Predict 6-month price movements of tech stocks (APPL, GOOG, FB, MSFT, AMZ)        based on historical prices.
+## Potential Data sources
+* Yahoo Finance, Quandl, Quantopian, and IEX Finance
 
-# Potential Data sources
-* IEX Finance, Yahoo Finance, Quandl, Quantopian, Kaggle, US fundamental archives
+## Pipeline Design
+### FRONT END DESIGN
+* Create main windown 
+* Create objects (e.g. frames, buttons, icons) within the main window
+* Create functionality for event handling
+* Outcomes: Capture Ticker symbols in a list, investor Profile to allocate assets during optimization and investment amount.
 
-# Pipeline Design
 ### DATA INGESTION (Skills: APIs and Python)
-* Extract tech stock prices for the past 10 years
+* Based on input extract stock prices for the past 10 years
 
 ### DATA PROCESSING AND MANIPULATION (Skills: Python Pandas)
 * Clean and manipulate stock data
@@ -24,17 +27,16 @@
 * Push data to a PostgresSQL database
 
 ### DESCRIPTIVE STATISTICS (Skills: Python Quant)
-* Explore rolling mean, moving averages, and return rate of stocks
-* Determine risk and return (standard deviation)
-* Correlation analysis - Does one competitor affect others
+* Explore mean, std deviation, variance, rolling mean, rolling std-dev (7-21-180)
+* Determine risk, return, and volatility of stocks
+* Run Correlation analysis
 
 ### ANALYSIS (Skills: Python Quant)
-* Analyze competitor stocks effect on each other
-* Run Monte Carlo simulations
-* Precicting stock prices based on closing price and other factors
-    - Testing various models (Linear, log-linear, knn)
-    - Running cross-validations
-    - Predicting
+* Run various optimization functions (E.g. Maximize Returns, Minimize Volatility, Maximize Sharpe Ratio, Minimize Variance, Maximize Information Ratio, Minimize CvAR, Maximize Sortinos Ratio, Risk Parity)
+* Evaluate weights  
+* Eliminate stocks from the portfolio with highest volatility and also stocks that are higly correlated
+* Run Monte Carlo simulations to get the probability of the objective functions over various outcomes (E.g.returns, closing prices)
+* TBD: Precicting stock prices based on closing price and other factors
 
 ### VISUALIZATIONS (Skills: PyViz, Plotly, HvPlot, Panel)
 * Plotting the prediction

@@ -14,6 +14,10 @@
 
 7. [All weather portfolio](https://www.etftrends.com/fixed-income-channel/remember-all-weather-portfolio-having-killer-year/)
 
+8. [Portfolio Optimization](https://pythonforfinance.net/2017/01/21/investment-portfolio-optimisation-with-python/)
+
+9. [Monte Carlo bsics](https://www.investopedia.com/articles/investing/112514/monte-carlo-simulation-basics.asp)
+
 # Approach
 ## Oct 12th:
 * Tasks 1: Finalize Project outline (Do we need to include bonds? What else we need on the input screen? What is our output screen going to be? What are we optimizing?)
