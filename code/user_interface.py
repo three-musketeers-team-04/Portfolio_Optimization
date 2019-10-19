@@ -1,32 +1,5 @@
-###########################
-# PORTFOLIO OPTIMIZER
-###########################
-# Customer input: Inputs upto 5 stock tickers
-# Portfolio Optimizer performs the below tasks:
-# Ingests historical data upto 10 years
-# Processes and manipulates data
-# Stores it into a database (TBD)
-# Calculates different statistics, returns, and risk
-# Selects stocks to keep in portfolio based on various variables (TBD)
-# Run a Monte Carlo Simulation with random weights to pick best portfolio return
-# Visualizes an optimized porfolio based on risk-return tradeoff
-# Built in trailing stop for certain thresholds (TBD)
-# Run a Monte Carlo Simulation for returns of each stock 
-# Calculate confidence intervals for 6-12 month prediction
-
-################
-# KNOWLEDGE REPO
-################
-# How do we accomodate for variations in allocations across the portfolio?
-# How does the investment amount come into play?
-# Do we need to run a monte carlo for forecasting and optimization seperately?
-# What are the other benefits of OOP besides organization
-# How do we incorporate the risk profile? Low Risk [20/80], High Risk [60/40] - US treasury 10 year bond
-# Are we running the efficient frontier with the bond allocation stocks? Data needed? TBD
-# what is the output of the efficient frontier? Allocation and visual?
-
-####################
-# LIBRARY IMPORTS 
+#################
+# LIBRARY IMPORTS
 #################
 import pandas as pd
 import numpy as np
@@ -40,9 +13,8 @@ from PIL import ImageTk, Image
 from threading import Thread
 import time
 import datetime
-
-import ticker_symbols
-
+import pandas_datareader as pdr
+import backend_app
 
 ##############
 # FRONT END UI
@@ -128,9 +100,12 @@ class StartPage(tk.Frame):
         print(data)
         ticker_symbols_list = [l[0] for l in data['tickers']]
         print(ticker_symbols_list)
-        df = ticker_symbols.extract_data(ticker_symbols_list, datetime.datetime(2019, 9, 10), datetime.datetime(2019, 10, 1))
-        print(df)
 
+        # TODO fetch from UI scales (Create a scale for each stock)
+        weights = [l[1] for l in data['tickers']]
+        backend_app.process(ticker_symbols_list, weights)
+        # df = ing.extract_data(ticker_symbols_list)
+        # print(df)
 
 
 class HeadFrame(tk.Frame):
@@ -304,162 +279,4 @@ class VersionMenu(tk.Menu):
     def about(self):
         print("about")
 
-
-app = UI()
-app.mainloop()
-
-#################
-# DATA INGESTION
-#################
-class Ingestion(self):
-    """Extracts data from an external source into a python dataframe"""
-
-    def extract_data():
-        """Creates an api connection with yahoo finance via pandas datareader"""
-        pass  
-
-
-###################
-# DATA MANIPULATION 
-###################
-class Manipulation(self):
-    def clean_nulls():
-        """Remove nulls from the dataframe"""
-        pass
-
-    def rename_columns():
-        pass
-
-    def missing_week_check():
-        """Check for missing weeks of data and adjust"""
-        pass
-    
-    def apply_week_normalization():
-        """For stocks that do not have the max week impute with mean"""
-        pass
-    
-    def apply_pivot_function():
-        """Pivot the dataframe for analysis"""
-        pass
-
-
-##########################
-# LOADING HISTORICAL DATA
-#########################
-class LoadingDatabase(self):
-    def create_connection_string():
-        pass 
-    
-    def create_cursor():
-        pass 
-    
-    def upload_data():
-        pass 
-
-
-########################
-# DESCRIPTIVE STATISTICS
-########################
-class Reporting(self):
-    def descriptive_stats():
-        """Descriptive stats correlation, mean, standard deviaiton"""    
-        pass
-    
-    def rolling_statistics():
-        """ Calculate rolling mean, standard deviation at different levesl 7-30-180 """
-        pass
-
-    def beta():
-        """Calculate covariance, variances, and beta values"""
-        pass   
-
-    def rolling_betas():
-        """Calculate rolling betas 7-30-180"""
-        pass
-
-
-###################################################
-# OPTIMAL PORTFOLIO SELECTION AND ASSET FORECASTING
-##################################################
-class Analysis(self):
-# Optimal Portfolio
-    def portfolio_optimization_risk_return():
-        """Drop correlated stocks and ones that have high volatility"""
-        pass 
-        
-    def daily_returns():
-        """Calculate daily returns of all stocks"""
-        pass 
-
-    def portfolio_returns():
-        """Add weights to each stock within the portfolio and calculate returns"""
-        pass
-
-    def monte_carlo_weights():
-        """Run portfolio returns with random weights"""
-        pass
-
-    def efficient_frontier():
-        """Create efficient frontier based on monte carlo simulation to pick best portfolio mix"""
-        pass
-
-    def calculate_confidence_intervals():
-        """Calculate confidence intervals for return"""
-      
-# Forecasting returns for each stock within the portfolio
-    def calc_portfolio_returns_compared_to_benchmark():
-        """For a specific investment calculate cumulative portfolio returns to the sp_500"""
-        pass 
-        
-    def monte_carlo_returns():
-        """Run monte-carlo simulation of each stock return"""
-        pass
-
-
-#########################
-# DASHBOARD VISUALIZATION
-#########################
-class Visualization(self):
-    """Create visualizations of all analysis and pack into a dashboard"""
-
-    def plot_prediction():
-        """Plotting prediction for 6 months to a year for each stock"""
-        pass
-
-    def plot_scatter_matrix():
-        """Creating a scatter matrix of stocks with histograms for distributions"""
-        pass 
-
-    def plot_heat_map():
-        """Create a heat map for the correlation matrix"""
-        pass 
-
-    def plot_efficient_frontier():
-        """Plot efficient frontier with the highest Sharpe and Sortino Ratio"""
-        pass 
-
-    def create_dashboard():
-        """Pack all the visualizations within a dashboard """
-        pass
-
-##################################
-# CONNECTING OUTPUT TO A FRONT-END 
-##################################
-
-
-
-
-###############################
-# ENTIRE PROCESS LOGIC SEQUENCE
-###############################
-def main():
-    """Logic for entire process"""
-    pass
-
-
-
-
-
-if __name__ == '__main__':
-    main() 
 
