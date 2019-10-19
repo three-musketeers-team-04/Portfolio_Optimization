@@ -103,7 +103,9 @@ class StartPage(tk.Frame):
 
         # TODO fetch from UI scales (Create a scale for each stock)
         weights = [l[1] for l in data['tickers']]
+        self.controller.withdraw()
         backend_app.process(ticker_symbols_list, weights)
+        self.controller.deiconify()
         # df = ing.extract_data(ticker_symbols_list)
         # print(df)
 
