@@ -1,20 +1,12 @@
 #################
 # LIBRARY IMPORTS
 #################
-import pandas as pd
-import numpy as np
-import sklearn as sk   
-
 import tkinter as tk
 import tkinter.ttk as ttk
 
 from collections import OrderedDict
 from PIL import ImageTk, Image
-from threading import Thread
 import time
-import datetime
-import pandas_datareader as pdr
-import backend_app
 
 ##############
 # FRONT END UI
@@ -24,9 +16,9 @@ class UI(tk.Tk):
     """
     Main Class that initiates and control the UI
     """
-    def __init__(self, *args, **kwargs) :
+    def __init__(self, process_fn, *args, **kwargs) :
         tk.Tk.__init__(self, *args, **kwargs)
-
+        self.process_fn = process_fn
         # self.attributes('-fullscreen', True)
 
         # Create a container frame to hold all the pages inside it
@@ -92,7 +84,7 @@ class StartPage(tk.Frame):
         data = {}
         data['time'] = time.strftime("%H-%M")
         data['investor_profile'] = {'high_risk_tolerance':self.body_frame.checkcmd1.get(),
-                                    'low_risk_tolerance':self.body_frame.checkcmd2.get()}
+                                    'low_risk_tolerance':self.body_frame.checkcmd2.get()}                                    
         data['asset_type'] = self.body_frame.radiocmd.get()
         data['investment_amount'] = self.body_frame.scale1.get()
         data['retirement_time_horizon'] = self.body_frame.scale2.get()
@@ -104,7 +96,7 @@ class StartPage(tk.Frame):
         # TODO fetch from UI scales (Create a scale for each stock)
         weights = [l[1] for l in data['tickers']]
         self.controller.withdraw()
-        backend_app.process(ticker_symbols_list, weights)
+        self.controller.process_fn(ticker_symbols_list, weights)
         self.controller.deiconify()
         # df = ing.extract_data(ticker_symbols_list)
         # print(df)
@@ -166,12 +158,12 @@ class BodyFrame(tk.Frame):
         self.radiocmd = tk.IntVar()
         radio1 = tk.Radiobutton(self, text="Stocks", variable=self.radiocmd, value=1)
         radio2 = tk.Radiobutton(self, text="Bonds", variable=self.radiocmd, value=2)
-        radio3 = tk.Radiobutton(self, text="Equities", variable=self.radiocmd, value=3)
-        radio4 = tk.Radiobutton(self, text="Fixed Income", variable=self.radiocmd, value=4)
+        # radio3 = tk.Radiobutton(self, text="Equities", variable=self.radiocmd, value=3)
+        # radio4 = tk.Radiobutton(self, text="Fixed Income", variable=self.radiocmd, value=4)
         radio1.grid(row=2, column=1, sticky='sw')
         radio2.grid(row=2, column=2, sticky='sw')
-        radio3.grid(row=2, column=3, sticky='sw')
-        radio4.grid(row=2, column=4, sticky='sw')
+        # radio3.grid(row=2, column=3, sticky='sw')
+        # radio4.grid(row=2, column=4, sticky='sw')
 
         self.scale1_label = tk.Label(self, text="$0",relief="solid", height=2)
         self.scale1 = tk.Scale(self, orient='horizontal', from_=0, to=1000000, command=self.set_scale1)
@@ -198,7 +190,9 @@ class PortfolioAssetsFrame(tk.Frame):
         self.parent = parent
         tk.Frame.__init__(self, parent, highlightbackground="black", highlightthickness=2)
 
-        titles = ["Number", "Ticker Symbol", "Allocation/Weight (%)", "Min-weight (%)", "Max-weight (%)"]
+        # titles = ["Number", "Ticker Symbol", "Allocation/Weight (%)", "Min-weight (%)", "Max-weight (%)"]
+        titles = ["Number", "Ticker Symbol", "Allocation/Weight (%)"]
+
         for i in range(len(titles)):
             self.columnconfigure(i, weight=1)
 
@@ -209,15 +203,15 @@ class PortfolioAssetsFrame(tk.Frame):
         nrows = 5
         self.asset_rows = []
         for i in range(nrows):
-            self.add_asset_row(i+1)
+            self.add_asset_row(i+1, len(titles)-1)
 
         
-    def add_asset_row(self, pos):
+    def add_asset_row(self, pos, columns):
         number_label = tk.Label(self, text=str(pos), font=('times', 16), borderwidth=2, height=1)
         number_label.grid(row=pos, column=0, padx=15, sticky='nsew')
 
         entry_fields = []
-        n_entries = 4 
+        n_entries = columns 
         for i in range(n_entries):
             entry = tk.Entry(self, width=15, highlightbackground='black', highlightthickness=1)
             entry.grid(row=pos, column=i+1)
@@ -280,5 +274,3 @@ class VersionMenu(tk.Menu):
 
     def about(self):
         print("about")
-
-
