@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from termcolor import colored
 import scipy.optimize as sco
 from jinja2 import Environment, FileSystemLoader
+import pdfkit
 # from xhtml2pdf import pisa
 
 plt.style.use('fivethirtyeight')
@@ -307,8 +308,8 @@ def plot_data_table(final_df):
     plt.clf()
     final_df.round(4)*1000
     final_df.head().to_html('images/table.html')
-    table = subprocess.call('wkhtmltoimage -f png --width 0 table.html table.png', shell=True)
-    return table
+    # table = subprocess.call('wkhtmltoimage -f png --width 0 table.html table.png', shell=True)
+    # return table
 
 
 def plot_individual_stock_trends(final_df):
@@ -490,30 +491,8 @@ def process(ticker_symbols_list, weights):
     print('Calculating simulated effecient frontier with selected weights')
     display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df, returns)
 
-    # env = Environment(loader=FileSystemLoader('.'))
-    # template = env.get_template("report.html")
-    # template_dict = {"title": "Sample Report",
-    #                  "simulated_portfolio_daily_returns": simulated_portfolio_daily_returns.to_frame().to_html(),
-    #                  "simulated_portfolio_cumulative_returns": simulated_portfolio_cumulative_returns.to_html(),
-    #                  "simulated_ending_cumulative_returns": simulated_ending_cumulative_returns.to_frame().to_html()               
-    # }
-    # html_out = template.render(template_dict)
-    # # HTML(string=html_out).write_pdf("report.pdf")
-    # with open('report.pdf', "w+b") as out_pdf_file_handle:
-    #     pisa.CreatePDF(
-    #         src=html_out,  # HTML to convert
-    #         dest=out_pdf_file_handle)
+ 
 
-    env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template("report.html")
-    # template_dict = {"title": "Sample Report",
-    #                 "simulated_portfolio_daily_returns": simulated_portfolio_daily_returns.to_frame().to_html(),
-    #                 "simulated_portfolio_cumulative_returns": simulated_portfolio_cumulative_returns.to_html(),
-    #                 "simulated_ending_cumulative_returns": simulated_ending_cumulative_returns.to_frame().to_html()               
-    # }
-    html_out = template.render()
-    with open("out.html", "w") as fh:
-        fh.write(html_out)
 
     
     print(colored("""
@@ -585,3 +564,14 @@ def process(ticker_symbols_list, weights):
               """, 'green'))
     print('\n' * 1)
 
+    env = Environment(loader=FileSystemLoader('.'))
+    template = env.get_template("report.html")
+    template_dict = {"table":final_df.head().to_html()}
+
+    html_out = template.render(template_dict)
+    with open("out.html", "w") as fh:
+        fh.write(html_out)
+
+    table = pdfkit.from_file('out.html', 'out.pdf')
+
+    subprocess.Popen(['out.html'], shell=True)
