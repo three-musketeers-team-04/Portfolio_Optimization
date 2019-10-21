@@ -87,7 +87,7 @@ class StartPage(tk.Frame):
                                     'low_risk_tolerance':self.body_frame.checkcmd2.get()}                                    
         data['asset_type'] = self.body_frame.radiocmd.get()
         data['investment_amount'] = self.body_frame.scale1.get()
-        data['retirement_time_horizon'] = self.body_frame.scale2.get()
+        data['investment_horizon'] = self.body_frame.scale2.get()
         data['tickers'] = [[e.get() for e in row] for row in self.bottom_frame.asset_rows]
         print(data)
         ticker_symbols_list = [l[0] for l in data['tickers']]
@@ -96,7 +96,7 @@ class StartPage(tk.Frame):
         # TODO fetch from UI scales (Create a scale for each stock)
         weights = [l[1] for l in data['tickers']]
         self.controller.withdraw()
-        self.controller.process_fn(ticker_symbols_list, weights)
+        self.controller.process_fn(ticker_symbols_list, weights, data)
         self.controller.deiconify()
         # df = ing.extract_data(ticker_symbols_list)
         # print(df)
@@ -140,7 +140,7 @@ class BodyFrame(tk.Frame):
         label_1 = tk.Label(self, text="Investor Profile", borderwidth=2, relief="solid", height=3)
         label_2 = tk.Label(self, text="Asset Type", borderwidth=2, relief="solid", height=3)
         label_3 = tk.Label(self, text="Investment Amount", borderwidth=2, relief="solid", height=3)
-        label_4 = tk.Label(self, text="Retirement Time Horizon", borderwidth=2, relief="solid", height=3)
+        label_4 = tk.Label(self, text="Investment Horizon", borderwidth=2, relief="solid", height=3)
         label_1.grid(row=0, column=0, rowspan=2, sticky='nswe', pady=10, padx=(15, 75))
         label_2.grid(row=2, column=0, rowspan=2, sticky='nswe', pady=10, padx=(15, 75))
         label_3.grid(row=4, column=0, rowspan=2, sticky='nswe', pady=10, padx=(15, 75))
@@ -148,10 +148,10 @@ class BodyFrame(tk.Frame):
 
         self.checkcmd1 = tk.IntVar()
         self.checkcmd2 = tk.IntVar()
-        self.checkcmd1.set(0)
+        self.checkcmd1.set(1)
         self.checkcmd2.set(0)
-        checkbox1 = tk.Checkbutton(self, variable=self.checkcmd1, onvalue=1, offvalue=0, text="High Risk Tolerance")
-        checkbox2 = tk.Checkbutton(self, variable=self.checkcmd2, onvalue=1, offvalue=0, text="Low Risk Tolerance")
+        checkbox1 = tk.Checkbutton(self, variable=self.checkcmd1, onvalue=1, offvalue=0, text="High Risk Tolerance", command=self.checkcmd1_event)
+        checkbox2 = tk.Checkbutton(self, variable=self.checkcmd2, onvalue=1, offvalue=0, text="Low Risk Tolerance", command=self.checkcmd2_event)
         checkbox1.grid(row=0, column=1, columnspan=2, sticky='ws')
         checkbox2.grid(row=1, column=1, columnspan=2, sticky='wn')
 
@@ -174,6 +174,12 @@ class BodyFrame(tk.Frame):
         self.scale2 = tk.Scale(self, orient='horizontal', from_=0, to=50, command=self.set_scale2)
         self.scale2_label.grid(row=6, column=1, sticky='sew')
         self.scale2.grid(row=6, column=2, columnspan=2, sticky='se')
+
+    def checkcmd1_event(self):
+        self.checkcmd2.set(abs(self.checkcmd2.get() - 1))
+
+    def checkcmd2_event(self):
+        self.checkcmd1.set(abs(self.checkcmd1.get() - 1))
 
     def set_scale1(self, event):
         self.scale1_label.configure(text="$"+event)

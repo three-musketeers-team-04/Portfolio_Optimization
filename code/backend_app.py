@@ -302,6 +302,21 @@ def display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df,
     ax.set_ylabel('annualised returns')
     ax.legend(labelspacing=0.8)
 
+    data = {}
+    an_rt_vol_df = pd.DataFrame()
+    for i in range(an_rt.shape[0]):
+        an_rt[i] = round(an_rt[i], 2)
+        an_vol[i] = round(an_vol[i], 2)
+    an_rt_vol_df['Annualised Return'] = an_rt
+    an_rt_vol_df['Annualised Volatility'] = an_vol
+    data['rp'] = rp
+    data['rp_min'] = rp_min
+    data['sdp'] = sdp
+    data['sdp_min'] = sdp_min
+    data['an_rt_vol_df'] = an_rt_vol_df
+
+    return data
+
 
 # Visualization
 def plot_data_table(final_df):
@@ -417,7 +432,7 @@ def plot_heat_map(final_df):
     # pass
 
 
-def process(ticker_symbols_list, weights):
+def process(ticker_symbols_list, weights, user_inputs):
     print('\n' * 1)
     print(colored("""
                 ########################
@@ -489,7 +504,7 @@ def process(ticker_symbols_list, weights):
     display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate, final_df)
     print('\n' * 1)
     print('Calculating simulated effecient frontier with selected weights')
-    display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df, returns)
+    efficient_frontier_data = display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df, returns)
 
  
 
@@ -564,14 +579,44 @@ def process(ticker_symbols_list, weights):
               """, 'green'))
     print('\n' * 1)
 
+    ## Reporting Section ##
+    print("######## Reporting ########")
+
+    # Loading the html template "report.html" to jinja
     env = Environment(loader=FileSystemLoader('.'))
     template = env.get_template("report.html")
-    template_dict = {"table":final_df.head().to_html()}
 
+    # Populating a dictionary of values to be passed to the html file
+    x = 'x'
+    y = 'y'
+    cum_returns_pct = '24%'
+    template_dict = {"final_df_table":final_df.head().to_html(),
+                     "investment_amount":user_inputs['investment_amount'],
+                     "investment_horizon":user_inputs['investment_horizon'],
+                     'x':x,
+                     'y':y,
+                     'cum_returns_pct':cum_returns_pct,
+                     'rp':efficient_frontier_data['rp'],
+                     'rp_min':efficient_frontier_data['rp_min'],
+                     'sdp':efficient_frontier_data['sdp'],
+                     'sdp_min':efficient_frontier_data['sdp_min'],
+                     'an_rt_vol_df':efficient_frontier_data['an_rt_vol_df'].to_html(),
+
+
+                    }
+
+    # Rendering the template to html passing the dictionary of values to it 
     html_out = template.render(template_dict)
+
+    # Write the html to a file
+    out_html_path = 'out.html'
     with open("out.html", "w") as fh:
         fh.write(html_out)
 
-    table = pdfkit.from_file('out.html', 'out.pdf')
+    # Creating a pdf file from the saved output html file
+    out_pdf_directory = "reports"
+    out_pdf_name = time.strftime('%m-%d-%Y-%H-%M') + "-portfolio-analysis.pdf"
+    out_pdf_path = out_pdf_directory + "\\" + out_pdf_name
+    table = pdfkit.from_file('out.html', out_pdf_path)
 
-    subprocess.Popen(['out.html'], shell=True)
+    subprocess.Popen([out_pdf_path], shell=True)
