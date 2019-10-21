@@ -22,18 +22,19 @@
 ## Usage
 The optimimzer can be used by anyone who wants to find out what is the best allocation for their stocks 
 The portfolio analysis report has the below sections:
-* Returns: Analyzes historical data to provide confidence interval for current investment over the investment horizon
-* Comparisons: Compares your current portfolio with the S&P500 based on historical returns
-* Optimized portfolio: Suggests an optimal allocation for your portfolio based on your slected risk level  
+* **Returns**: Analyzes historical data to provide confidence interval for current investment over the investment horizon
+* **Comparisons**: Compares your current portfolio with the S&P500 based on historical returns
+* **Optimized portfolio**: Suggests an optimal allocation for your portfolio based on your slected risk level  
 
 
 ## Requirements and Configuration
-* All requirements and dependencies are in the requirements.txt 
+* All requirements and dependencies are in code/requirements folder 
 * The only other configuration is to run the wkhtmltox-0.12.5-1.msvc2015-win64.exe file in the code/archives folder
 * Once the config is run the user needs to add the path to their System - path variable. Below is an image of where one could find that:
 
 ![Environment variable config](code/images/add_to_path_variable.png)
 
+Have fun with the portfolio optimizer! :+1:
 
 ## Disclaimer
 Developers of the PO are not registered as a securities broker-dealer or an investment adviser either with the U.S. Securities and Exchange Commission (the “SEC”) or with any state securities regulatory authority. We are neither licensed nor qualified to provide investment advice. Use PO suggestions at your own discretion
