@@ -196,7 +196,7 @@ def random_portfolios(mean_returns_series, cov_matrix, risk_free_rate, num_portf
 # risk_free_rate = 0.0178
 
 
-def display_simulated_ef_with_random(mean_returns_series, cov_matrix, num_portfolios, risk_free_rate, final_df):
+def display_simulated_ef_with_random(mean_returns_series, cov_matrix, num_portfolios, risk_free_rate, final_df, returns_df):
     results, weights = random_portfolios(mean_returns_series, cov_matrix, risk_free_rate, num_portfolios)
     
     max_sharpe_idx = np.argmax(results[2])
@@ -234,6 +234,24 @@ def display_simulated_ef_with_random(mean_returns_series, cov_matrix, num_portfo
     plt.ylabel('annualised returns')
     plt.legend(labelspacing=0.8)
     plt.savefig('images/efficient_frontier')
+
+    an_vol = np.std(returns_df) * np.sqrt(252)
+    an_rt = mean_returns_series * 252
+    data = {}
+    an_rt_vol_df = pd.DataFrame()
+    for i in range(an_rt.shape[0]):
+        an_rt[i] = round(an_rt[i], 2)
+        an_vol[i] = round(an_vol[i], 2)
+    an_rt_vol_df['Annualised Return'] = an_rt
+    an_rt_vol_df['Annualised Volatility'] = an_vol
+    data['rp'] = rp
+    data['rp_min'] = rp_min
+    data['max_sharp_allocation'] = max_sharpe_allocation.to_html()
+    data['min_vol_allocation'] = min_vol_allocation.to_html()
+    data['sdp'] = sdp
+    data['sdp_min'] = sdp_min
+    data['an_rt_vol_df'] = an_rt_vol_df
+    return data
 
 
 def neg_sharpe_ratio(weights, mean_returns_series, cov_matrix, risk_free_rate):
@@ -338,28 +356,9 @@ def display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df,
     ax.set_xlabel('annualised volatility')
     ax.set_ylabel('annualised returns')
     ax.legend(labelspacing=0.8)
-
-    data = {}
-    an_rt_vol_df = pd.DataFrame()
-    for i in range(an_rt.shape[0]):
-        an_rt[i] = round(an_rt[i], 2)
-        an_vol[i] = round(an_vol[i], 2)
-    an_rt_vol_df['Annualised Return'] = an_rt
-    an_rt_vol_df['Annualised Volatility'] = an_vol
-    data['rp'] = rp
-    data['rp_min'] = rp_min
-    data['max_sharp_allocation'] = max_sharpe_allocation.to_html()
-    data['min_vol_allocation'] = min_vol_allocation.to_html()
-    data['sdp'] = sdp
-    data['sdp_min'] = sdp_min
-    data['an_rt_vol_df'] = an_rt_vol_df
-
-
     # plot = min_vol_allocation.plot.pie(y='Symbols', figsize=(5, 5))
     # pie = plot[0].get_figure()
     # pie.savefig('images\chart.png')
-
-    return data
 
 
 # Visualization
@@ -553,10 +552,10 @@ def process(ticker_symbols_list, weights, user_inputs):
     risk_free_rate = 0.0178
     
     print('Calculating simulated effecient frontier with random weights')
-    display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate, final_df)
+    efficient_frontier_data = display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate, final_df, returns)
     print('\n' * 1)
     print('Calculating simulated effecient frontier with selected weights')
-    efficient_frontier_data = display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df, returns)
+    display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df, returns)
 
     confidence_intervals = calculate_confidence_intervals(simulated_ending_cumulative_returns)
     investment_pnl_lower_bound, investment_pnl_higher_bound = calculate_confidence_level_of_investment(user_inputs['investment_amount'],  confidence_intervals)
