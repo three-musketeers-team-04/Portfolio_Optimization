@@ -28,7 +28,7 @@ def extract_data(ticker_symbols_list):
 
     # ticker_symbols_list.extend(['SPY', '^TNX'])
     main_df = pdr.get_data_yahoo(ticker_symbols_list, start_sp, end_sp)['Close']
-    print(main_df.head())
+    # print(main_df.head())
     # manipulate = Manipulation()
     # final_df = manipulate.clean_nulls(main_df)
     return main_df, ticker_symbols_list
@@ -43,13 +43,14 @@ def clean_nulls(main_df):
 def descriptive_stats(final_df):
     """Stats around returns, standard deviation, mean returns, and covariance"""    
     returns_df = final_df.pct_change() 
+    cum_daily_returns_df = (1+ returns_df).cumprod()
     
     mean_returns_series = returns_df.mean()
     std_dev_series = returns_df.std()
     cov_matrix = returns_df.cov()
     # Loop through the columns to get mean returns and std dev for each stock variable
     # stock_mean_returns = mean_returns['stock']
-    return returns_df, mean_returns_series, std_dev_series, cov_matrix 
+    return returns_df, mean_returns_series, std_dev_series, cov_matrix, cum_daily_returns_df 
     
 
 # Forecasting returns for each stock within the portfolio
@@ -114,23 +115,58 @@ def probability_distribution(ending_cumulative_returns, portfolio_daily_returns)
 def calculate_confidence_intervals(ending_cumulative_returns):
     """Calculate confidence intervals for return"""
     confidence_interval = ending_cumulative_returns.quantile(q=[0.025, 0.975])
-    # Set initial investment
-    initial_investment = 10000
+    return confidence_interval
+                                                    
 
+def calculate_confidence_level_of_investment(initial_investment, confidence_interval):
     # Calculate investment profit/loss of lower and upper bound cumulative portfolio returns
     investment_pnl_lower_bound = initial_investment * confidence_interval.iloc[0]
     investment_pnl_upper_bound = initial_investment * confidence_interval.iloc[1]
-                                                    
-# Print the results
-    # print(f"There is a 95% chance that an initial investment of $10,000 in the portfolio"
-    #   f" over the next 252 * 3 trading days will end within in the range of"
-    #   f" ${investment_pnl_lower_bound} and ${investment_pnl_upper_bound}")
-    #     return confidence_interval
     
+    print(f"There is a 95% chance that an initial investment of $10,000 in the portfolio"
+      f" over the next 252 * 3 trading days will end within in the range of"
+      f" ${investment_pnl_lower_bound} and ${investment_pnl_upper_bound}")
+    return investment_pnl_lower_bound, investment_pnl_upper_bound
+
+
+def calculate_portfolio_returns_compared_to_benchmark(final_df, returns_df, ticker_symbols_list, start_sp, end_sp, weights):
+    """Compare returns to indexes and funds"""
+    port_daily_returns_df = returns_df.dot(weights)
+
+    new_ticker_symbols_list = ticker_symbols_list.extend(['SPY', '^TNX', 'INDEXSPY', 'DJIA'])
+    revised_df = pdr.get_data_yahoo(new_ticker_symbols_list, start_sp, end_sp)['Close']
+    revised_returns_df = revised_df.pct_change()
+    revised_returns_df = revised_returns_df['SPY', '^TNX', 'INDEXSPY', 'DJIA']
+
+    merged_revised_returns_df = ['']
+    cum_merged_revised_returns_df = (1 + merged_revised_returns_df).cumprod()
     
-def calc_portfolio_returns_compared_to_benchmark():
-    """For a specific investment calculate cumulative portfolio returns to the sp_500"""
-    pass 
+    return revised_returns_df, merged_revised_returns_df, cum_merged_revised_returns_df
+
+
+def plot_benchmark_daily_returns_comparisons(merged_revised_returns_df):
+    """Daily returns plot"""
+    plt.clf()
+    merged_revised_returns_df.plot(subplots = False, figsize = (20,10))
+    plt.savefig('images/daily_returns_comparison_to_bencmarks')
+
+
+def plot_benchmark_cumulative_returns_comparison(cum_merged_revised_returns_df):
+    """Cumulative returns plot"""
+    cum_merged_revised_returns_df.plot(subplots = False, figsize = (25,10))
+    plt.savefig('images/cum_returns_comparison_to_benchmarks')
+    
+
+def plot_stocks_and_index_comparison(revised_df):
+    """Basic plot of all stocks and indexes seperately"""
+    plt.clf()
+    revised_df.plot(subplots = False, figsize = (20,10))
+    plt.savefig('images/base_stocks_comparison_with_indexes')
+
+def calculating_ratios(mean_returns_series, std_dev_series, cov_matrix):
+    """Calculate different ratios and list them in a table"""
+    pass
+
 
 ####################
 # EFFICIENT FRONTIER
@@ -153,7 +189,6 @@ def random_portfolios(mean_returns_series, cov_matrix, risk_free_rate, num_portf
         results[1,i] = sim_portfolio_return
         results[2,i] = (sim_portfolio_return - risk_free_rate) / sim_portfolio_std_dev
     return results, weights_record
-
 # returns = main_df.pct_change()
 # mean_returns = returns.mean()
 # cov_matrix = returns.cov()
@@ -200,7 +235,7 @@ def display_simulated_ef_with_random(mean_returns_series, cov_matrix, num_portfo
     plt.legend(labelspacing=0.8)
     plt.savefig('images/efficient_frontier')
 
-###############
+
 def neg_sharpe_ratio(weights, mean_returns_series, cov_matrix, risk_free_rate):
     p_var, p_ret = portfolio_annualised_performance(weights, mean_returns_series, cov_matrix)
     return -(p_ret - risk_free_rate) / p_var
@@ -215,8 +250,10 @@ def max_sharpe_ratio(mean_returns_series, cov_matrix, risk_free_rate):
                         method='SLSQP', bounds=bounds, constraints=constraints)
     return result
 
+
 def portfolio_volatility(weights, mean_returns_series, cov_matrix):
     return portfolio_annualised_performance(weights, mean_returns_series, cov_matrix)[0]
+
 
 def min_variance(mean_returns_series, cov_matrix):
     num_assets = len(mean_returns_series)
@@ -227,8 +264,8 @@ def min_variance(mean_returns_series, cov_matrix):
 
     result = sco.minimize(portfolio_volatility, num_assets*[1./num_assets,], args=args,
                         method='SLSQP', bounds=bounds, constraints=constraints)
-
     return result
+
 
 def efficient_return(mean_returns_series, cov_matrix, target):
     num_assets = len(mean_returns_series)
@@ -311,9 +348,16 @@ def display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df,
     an_rt_vol_df['Annualised Volatility'] = an_vol
     data['rp'] = rp
     data['rp_min'] = rp_min
+    data['max_sharp_allocation'] = max_sharpe_allocation.to_html()
+    data['min_vol_allocation'] = min_vol_allocation.to_html()
     data['sdp'] = sdp
     data['sdp_min'] = sdp_min
     data['an_rt_vol_df'] = an_rt_vol_df
+
+
+    # plot = min_vol_allocation.plot.pie(y='Symbols', figsize=(5, 5))
+    # pie = plot[0].get_figure()
+    # pie.savefig('images\chart.png')
 
     return data
 
@@ -337,9 +381,9 @@ def plot_individual_stock_trends(final_df):
 def plot_monte_carlo(portfolio_cumulative_returns):
     """Plotting all plots from the monte carlo analysis"""
     plt.clf()
-    n = 10
-    plot_title = f"{n+1} Simulations of Cumulative Portfolio Return Trajectories Over the Next 252 Trading Days"
-    portfolio_cumulative_returns.plot(legend=None, title=plot_title)
+    # n = 10
+    # plot_title = f"Simulations of Cumulative Portfolio Returns"
+    portfolio_cumulative_returns.plot(legend = False, subplots = False, figsize = (30,10), title='Simulations of Cumulative Portfolio Returns', fontsize = 6)
     plt.savefig('images/montecarlo_simulation', dpi=100)
 
 
@@ -386,15 +430,35 @@ def plot_daily_returns(returns_df):
 def plot_cum_returns(returns_df):
     plt.clf()
     cum_returns_df = (1 + returns_df).cumprod()
-    cum_returns_df.plot(subplots = False, figsize = (25,10))
+    cum_returns_df.plot(subplots = False, figsize = (25,10), title = 'Cumulative Daily Returns')
     plt.savefig('images/cum_daily_returns')
 
 
-def plot_scatter_matrix(final_df):
+def plot_scatter_matrix(final_df, ticker_symbols_list):
     """Creating a scatter matrix of stocks with histograms for distributions"""
     plt.clf()
-    pd.plotting.scatter_matrix(final_df)
-    plt.savefig('images/scatter_matrix')
+    # pd.plotting.scatter_matrix(final_df)
+    names = ticker_symbols_list
+    correlations = final_df.corr(method = 'pearson')
+    # correlations.style.background_gradient(cmap='coolwarm').set_precision(2)
+    # plot correlation matrix
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(correlations, vmin=-1, vmax=1)
+    fig.colorbar(cax)
+    ticks = np.arange(0,9,1)
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
+    ax.set_xticklabels(names, fontsize = 5, rotation = 90)
+    ax.set_yticklabels(names, fontsize = 5, rotation = 90)
+    plt.savefig('images/correlation_matrix')
+
+
+def plot_histograms(final_df):
+    """"Creating histogram plots for all stocks"""
+    plt.clf()
+    final_df.hist(bins = 5, figsize = (20,10), xlabelsize = 7, color = 'blue')
+    plt.savefig('images/histogram_matrix')
 
 
 def plot_scatter_matrix_triangle(final_df):
@@ -417,21 +481,6 @@ def plot_heat_map(final_df):
     plt.savefig('images/heat_map')
 
 
- # def plot_future_returns_prediction():
-    # """Plotting prediction for 6 months to a year for each stock"""
-    # pass
-
-
-# def plot_table_ratios():
-#     """Plotting different financial portfolio ratios"""   
-#     pass
-
-
-# def create_dashboard():
-    # """Pack all the visualizations within a dashboard """
-    # pass
-
-
 def process(ticker_symbols_list, weights, user_inputs):
     print('\n' * 1)
     print(colored("""
@@ -444,15 +493,18 @@ def process(ticker_symbols_list, weights, user_inputs):
 
     weights = [float(weight)/100 for weight in weights if weight != ""]
     print(weights)
+    
     print('\n' * 1)
     print(ticker_symbols_list)
     for i in range(len(ticker_symbols_list) - len(weights)):
         weights.append(0.0)
-    # final_df = clean_nulls(main_df)
-    final_df = main_df
+    final_df = clean_nulls(main_df)
+    print(user_inputs)
+    # final_df = main_df
     print('\n' * 1)
-    
-    
+
+
+    time.sleep(2) # Wait for 2 seconds
     print(colored("""
                 ############################
                 # INGEST AND MANIPULATE DATA
@@ -460,12 +512,12 @@ def process(ticker_symbols_list, weights, user_inputs):
               """, 'green'))
     print('\n' * 1)
     print('Extracting 20 year historical stock closing prices')
-    time.sleep(5) # Wait for 5 seconds
     print('\n' * 1)
     print(final_df.head())
     print('\n' * 1)
-    
-    
+
+
+    time.sleep(2) # Wait for 2 seconds
     print(colored("""
                 ##############
                 # ANALYZE DATA
@@ -473,7 +525,7 @@ def process(ticker_symbols_list, weights, user_inputs):
               """, 'green'))
     print('\n' * 1)
 
-    returns_df, mean, std, cov_matrix = descriptive_stats(final_df)
+    returns_df, mean, std, cov_matrix, cum_daily_returns_df = descriptive_stats(final_df)
     # global final_mean
     final_mean = mean
     
@@ -497,7 +549,7 @@ def process(ticker_symbols_list, weights, user_inputs):
     returns = returns_df
     mean_returns = mean
     # cov_matrix = returns.cov()
-    num_portfolios = 25000
+    num_portfolios =25000
     risk_free_rate = 0.0178
     
     print('Calculating simulated effecient frontier with random weights')
@@ -506,10 +558,9 @@ def process(ticker_symbols_list, weights, user_inputs):
     print('Calculating simulated effecient frontier with selected weights')
     efficient_frontier_data = display_ef_with_selected(mean_returns, cov_matrix, risk_free_rate, final_df, returns)
 
- 
-
-
-    
+    confidence_intervals = calculate_confidence_intervals(simulated_ending_cumulative_returns)
+    investment_pnl_lower_bound, investment_pnl_higher_bound = calculate_confidence_level_of_investment(user_inputs['investment_amount'],  confidence_intervals)
+    time.sleep(2) # Wait for 2 seconds
     print(colored("""
                 #######################
                 # CREATE VISUALIZATIONS
@@ -540,16 +591,18 @@ def process(ticker_symbols_list, weights, user_inputs):
 
     print('\n' * 1)
     print('Plotting scatter_matrix')
-    plot_scatter_matrix(final_df)
+    plot_scatter_matrix(final_df, ticker_symbols_list)
     # plot_scatter_matrix_triangle(final_df)
     print('\n' * 1)
     # print('Plotting heat maps')
     # print("\033[1;32;40m Running heat maps \n")
     # plot_heat_map(final_df)
     # print('\n' * 1)
+    print('Plotting histograms')
+    plot_histograms(final_df)
 
 
-    # print('\n' * 1)    
+    print('\n' * 1)    
     print('Plotting simulated portfolio cumulative returns')
     plot_monte_carlo(simulated_portfolio_cumulative_returns)
     print('\n' * 1)
@@ -560,11 +613,11 @@ def process(ticker_symbols_list, weights, user_inputs):
     plot_dist_at_certain_confidence_interval(simulated_ending_cumulative_returns)
     
     
-    print(colored("""
-                ###################
-                # CREATE DASHBOARD
-                ###################
-              """, 'green'))
+    # print(colored("""
+    #             ###################
+    #             # CREATE DASHBOARD
+    #             ###################
+    #           """, 'green'))
     print('\n' * 1)
 
 
@@ -572,6 +625,7 @@ def process(ticker_symbols_list, weights, user_inputs):
     # test2 = pn.Column(plot_scatter_matrix(final_df), plot_daily_returns(returns_df))
     # dash = pn.Tabs(test1, test2)
     # dash.servable()
+    time.sleep(2) # Wait for 2 seconds
     print(colored("""
                 ###################
                 # OPTIMIZATIONS COMPLETED
@@ -579,31 +633,44 @@ def process(ticker_symbols_list, weights, user_inputs):
               """, 'green'))
     print('\n' * 1)
 
-    ## Reporting Section ##
-    print("######## Reporting ########")
-
-    # Loading the html template "report.html" to jinja
+    time.sleep(2) # Wait for 2 seconds
+    print(colored("""
+                ###############
+                # CREATE REPORT
+                ###############
+              """, 'green'))
+    print('\n' * 1)
+    # Loading the html template "template.html" to jinja
     env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template("report.html")
+    template = env.get_template("template.html")
 
     # Populating a dictionary of values to be passed to the html file
-    x = 'x'
-    y = 'y'
-    cum_returns_pct = '24%'
+    # cum_returns_pct = '24%'
     template_dict = {"final_df_table":final_df.head().to_html(),
                      "investment_amount":user_inputs['investment_amount'],
                      "investment_horizon":user_inputs['investment_horizon'],
-                     'x':x,
-                     'y':y,
-                     'cum_returns_pct':cum_returns_pct,
+                     'investment_pnl_lower_bound':investment_pnl_lower_bound,
+                     'investment_pnl_higher_bound':investment_pnl_higher_bound,
+                    #  'cum_returns_pct':cum_returns_pct,
                      'rp':efficient_frontier_data['rp'],
                      'rp_min':efficient_frontier_data['rp_min'],
+                     'max_sharp_allocation':efficient_frontier_data['max_sharp_allocation'],
+                     'min_vol_allocation':efficient_frontier_data['min_vol_allocation'],
                      'sdp':efficient_frontier_data['sdp'],
                      'sdp_min':efficient_frontier_data['sdp_min'],
                      'an_rt_vol_df':efficient_frontier_data['an_rt_vol_df'].to_html(),
-
-
                     }
+    if user_inputs['investor_profile']['high_risk_tolerance'] == 1:
+        template_dict['suggested_portfolio'] = 'Maximum Sharpe Ratio'
+        template_dict['rp_suggested'] = efficient_frontier_data['rp']
+        template_dict['sdp_suggested'] = efficient_frontier_data['sdp']
+        template_dict['suggested_allocation'] = efficient_frontier_data['max_sharp_allocation']
+    else:
+        template_dict['suggested_portfolio'] = 'Minimum Volatility'
+        template_dict['rp_suggested'] = efficient_frontier_data['rp_min']
+        template_dict['sdp_suggested'] = efficient_frontier_data['sdp_min']
+        template_dict['suggested_allocation'] = efficient_frontier_data['min_vol_allocation']
+ 
 
     # Rendering the template to html passing the dictionary of values to it 
     html_out = template.render(template_dict)
